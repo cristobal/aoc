@@ -79,7 +79,7 @@ function parseSeat (line) {
   return { row, column, seatId }
 }
 
-async function main () {
+function main () {
   const lines = require('fs').readFileSync('./input.txt', 'utf-8').split('\n').filter(v => v)
   const seats = lines.map(line => parseSeat(line))
   const seatIds = seats.map(seat => seat.seatId).sort((a, b) => b - a)

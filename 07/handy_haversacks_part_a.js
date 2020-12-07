@@ -1,7 +1,7 @@
 const lines = require('fs').readFileSync('./input.txt', 'utf-8').split('\n')
 
 const createContainerColorPattern =
-  (match) => new RegExp(`(?<color>\\w+\\s\\w+)\\sbag(|s)\\scontain(\\s\\d+\\s(\\w+\\s)+bag(s|)(,|)){0,}(\\s\\d+\\s${match}\\s+bag(s|)(,|))`)
+  (match) => new RegExp(`(?<color>\\w+ \\w+) bag(|s) contain( \\d+ (\\w+ )+bag(s|)(,|)){0,}( \\d+ ${match} +bag(s|)(,|))`)
 
 function searchContainerColors (color) {
   const pattern = createContainerColorPattern(color)
@@ -13,7 +13,7 @@ function searchContainerColors (color) {
 function searchContainerColorsPathRec (color) {
   const containerColors = searchContainerColors(color)
   if (containerColors.length === 0) {
-    return [ color ] 
+    return [ color ]
   }
 
   return containerColors.map(

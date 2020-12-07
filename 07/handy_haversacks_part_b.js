@@ -1,7 +1,7 @@
 const lines = require('fs').readFileSync('./input.txt', 'utf-8').split('\n')
 
 const createContainsColorPattern =
-  (match) => new RegExp(`^(:?${match}\\sbag(|s)\\scontain)(?<match>(\\s\\d+\\s(\\w+\\s)+bag(s|)(,|.|))+)$`)
+  (match) => new RegExp(`^(:?${match} bag(|s) contain)(?<match>( \\d+ (\\w+ )+bag(s|)(,|.|))+)$`)
 
 const matchTotalAndColorPattern =
   /(?<total>\d+)\s(?<color>(\w+(\s\w+)+))\sbag/

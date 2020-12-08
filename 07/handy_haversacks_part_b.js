@@ -18,14 +18,14 @@ function searchContainsColors (color) {
     ).flat()
 }
 
-function searchContainsPathRec (color, level = 1) {
+function searchContainsPathRec (color) {
   const containsColors = searchContainsColors(color)
   // return {
   //   color,
   //   contains: containsColors.map(({ color, total }) => (Object.assign({}, { total }, searchContainsPathRec(color))))
   // }
 
-  return containsColors.reduce((acc, item) => acc + (item.total * searchContainsPathRec(item.color)), 1)
+  return containsColors.reduce((acc, item) => acc + (item.total * searchContainsPathRec(item.color)))
 }
 
 const total = searchContainsPathRec('shiny gold') - 1

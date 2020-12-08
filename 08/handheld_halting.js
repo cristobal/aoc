@@ -42,13 +42,15 @@ function run () {
   return { sum, cycle, index }
 }
 
-let result  = run ()
+let result = run ()
 console.log(`acc: ${result.sum}`)
 
-// brute force, this can be done better.
-let index = 0
+// use stored cycle path, start changing jmp/nop from left to right
+let index = null
 let instr = null
-for (; index < stackSize; index++) {
+let total = 0
+const cycleSize = result.cycle.length
+for (index of result.cycle) {
   const frame = stack[index]
   if (frame.instr === 'acc') {
     continue
@@ -60,6 +62,7 @@ for (; index < stackSize; index++) {
     : 'jmp'
 
   result = run()
+  total++
   if (result.index === stackSize) {
     break
   }
@@ -67,4 +70,4 @@ for (; index < stackSize; index++) {
   frame.instr = instr // revert
 }
 
-console.log(`acc: ${result.sum}, index: ${index}, was: ${instr}, now: ${stack[index].instr}`)
+console.log(`acc: ${result.sum}, index: ${index}, was: ${instr}, now: ${stack[index].instr}, total: ${total++}`)

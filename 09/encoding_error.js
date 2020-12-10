@@ -74,19 +74,23 @@ function findFirstNumber () {
 
 function findContigousSet (value) {
   for (let windowSize = 2; windowSize < windowStep; windowSize++) {
-    for (let x = 0; x < windowStep; x++) {
-      let sum = 0
-      let i = x
-      let size = i + windowSize
-      for (; i < size; i++) {
-        sum += numbers[i]
+    let x = 0
+    let sum = 0
+    for (;x < windowSize; x++) {
+      sum += numbers[x]
+    }
+
+    while (x < windowStep) {
+      if (sum === value) {
+        return numbers.slice(x, x + windowSize)
       }
 
-      if (sum === value) {
-        return numbers.slice(i, i + windowSize)
-      }
+      sum = (sum + numbers[x]) - numbers[x - windowSize]
+      x = x + 1
     }
   }
+
+  throw new Error('Could not find contiguos set')
 }
 
 async function main () {

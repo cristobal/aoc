@@ -65,6 +65,27 @@ const parseFloatingBitMaskPerms =
   (floatingMasks) => {
     const size = floatingMasks.length - 1
     if (bitMasksPerms.has(size)) {
+      /*
+        For each permutation of mask for the corresponding size e.g.:
+          [
+            [1, 1, 1],
+            [1, 1, 0],
+            [1, 0, 1],
+            ...
+          ]
+
+        Create a list of correspond masks that tells what mask should be applied
+        at bit position n.
+
+        [
+          [ { bit: n, mask: 1}, { bit: n2, mask: 1}, { bit: n2, mask: 1} ],
+          [ { bit: n, mask: 1}, { bit: n2, mask: 1}, { bit: n3, mask: 0} ],
+          [ { bit: n, mask: 1}, { bit: n2, mask: 0}, { bit: n3, mask: 1} ],
+          ...
+        ]
+
+        Where n, n2 and n3, are the corresponding bit position for the floating bit.
+      */
       return bitMasksPerms.get(size)
         .map(
           perm => (
@@ -73,6 +94,16 @@ const parseFloatingBitMaskPerms =
         )
     }
 
+    /*
+      Generate the bit string permutations e.g.
+        [
+        '111', '110', '101', '100',
+        '011', '010', '001', '000'
+        ]
+
+      Split each permutation to chars and map to a list of corresponding
+      1's and 0's.
+    */
     const bitPerms = bitPermutations(size)
       .map(
         bitPerm => bitPerm.split('').map(v => BigInt(v))
@@ -106,9 +137,12 @@ for (const stmt of program) {
     addr |= bitOn << mask.bit // toggles bit on
   }
 
+  // generate new addresses to write the value from mem.val
   for (const maskPerm of floatingMaskPerms) {
     dstAddr = addr
     for (const mask of maskPerm) {
+      // clears bit setting it to 0
+      // toggles bit on if mask 1 otherwise it will remain 0
       dstAddr &= ~(bitOn << mask.bit)
       dstAddr ^= (mask.mask << mask.bit)
     }

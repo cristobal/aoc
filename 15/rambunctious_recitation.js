@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 function resolveRambunctiousNumber (input, size) {
   const seen = new Map()
+  const start = process.hrtime.bigint()
+
   input.slice(0, -1)
     .forEach((value, index) => seen.set(value, index))
 
@@ -14,10 +16,26 @@ function resolveRambunctiousNumber (input, size) {
     input.push(value)
     seen.set(prev, pi)
   }
+  const stop = process.hrtime.bigint()
+  const elapsed = Number.parseFloat(
+    Number(stop - start) / 1e9
+  ).toPrecision(2)
 
-  return input[input.length - 1]
+  return {
+    value: input[input.length - 1],
+    seen: seen.size,
+    elapsed
+  }
 }
 
-// console.log(`The 2020th number spoken is: ${partOne([0, 3, 6], 2020)}`)
-console.log(`The 2020th number spoken is: ${resolveRambunctiousNumber([12, 1, 16, 3, 11, 0], 2020)}`)
-console.log(`The 30000000th number spoken is: ${resolveRambunctiousNumber([12, 1, 16, 3, 11, 0], 30000000)}`)
+// const input = [0, 3, 6]
+const input = [12, 1, 16, 3, 11, 0]
+const sizes = [
+  2020,
+  30000000
+]
+
+for (const size of sizes) {
+  const result = resolveRambunctiousNumber(input, size)
+  console.log(`The ${size}th number spoken is: ${result.value} (seen: ${result.seen}) (elapsed: ${result.elapsed}s)`)
+}

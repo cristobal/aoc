@@ -1,20 +1,20 @@
 #!/usr/bin/env node
 function resolveRambunctiousNumber (input, size) {
-  const seen = new Map()
+  const lut = [...Array(size)].map(() => 0)
   const start = process.hrtime.bigint()
 
   input.slice(0, -1)
-    .forEach((value, index) => seen.set(value, index))
+    .forEach((value, index) => { lut[value] = index })
 
   for (let i = input.length; i < size; i++) {
     const pi = i - 1
-    const prev = input[pi]
-    const value = seen.has(prev)
-      ? (pi + 1) - (seen.get(prev) + 1)
+    const ppi = lut[input[pi]]
+    const value = ppi > 0
+      ? (pi + 1) - (ppi + 1)
       : 0
 
     input.push(value)
-    seen.set(prev, pi)
+    lut[value] = i
   }
 
   const stop = process.hrtime.bigint()

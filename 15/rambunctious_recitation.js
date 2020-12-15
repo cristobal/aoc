@@ -16,6 +16,7 @@ function resolveRambunctiousNumber (input, size) {
     input.push(value)
     seen.set(prev, pi)
   }
+
   const stop = process.hrtime.bigint()
   const elapsed = Number.parseFloat(
     Number(stop - start) / 1e9

@@ -3,12 +3,15 @@ function findRambunctiousNumber(numbers, turns) {
   const start = process.hrtime.bigint()
 
   // 1. Initialize history with size of numbers
-  const history = [];
-  for (let i = 0; i < turns; i++) {
-    history.push(0) }
+  const history = Array(turns + 1);
 
   // 2. Add numbers with correct turn to history
-  for (let i = numbers.length - 1; i--;) {
+  const max = numbers.reduce((a, b) => a > b ? a : b) + 1
+  for (let i = 0; i < max; i++) {
+    history[i] = 0
+  }
+
+  for (let i = numbers.length; i--;) {
     history[numbers[i]] = i + 1
   }
 
@@ -21,6 +24,8 @@ function findRambunctiousNumber(numbers, turns) {
     last = prev === 0
       ? 0
       : turn - 1 - prev
+
+    history[turn + 1] = 0
   }
 
   const stop = process.hrtime.bigint()

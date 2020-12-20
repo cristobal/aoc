@@ -1,80 +1,185 @@
 #!/usr/bin/env NODE_ENV=production node
-const program = require('fs').readFileSync('./input.txt', 'utf-8')
-.split('\n')
-.filter(line => line)
-.map(line => line.split('').filter(arg => arg.trim()))
+const expressions = require('fs').readFileSync('./input.txt', 'utf-8')
+  .split('\n')
+  .filter(line => line)
+  .map(line => line.trim())
 
 const patterns = {
-  number: /\d+/,
-  operator: /[+*]/
+  startsWithNumber: /^(?<number>\d+)/,
+  operatorThenExpr: / (?<operator>[*+]) (?<expr>.+)/,
 }
 
-const parentheses = {
-  open: '(',
-  close: ')'
+const symbols = {
+  operators: {
+    plus: '+',
+    multiplication: '*'
+  },
+  parentheses: {
+    open: '(',
+    close: ')'
+  }
 }
 
-const operators = {
-  sum: Symbol('+'),
-  multiplication: Symbol('*')
-}
+/**
+ * @typedef {Object} LeftToRightExpressions
+ * @property {string} [leftExpr]
+ * @property {string} [leftToRightOperator=null]
+ * @property {string} [rightExpr=null]
+ * @property {string} [rightToRestOperator=null]
+ * @property {string} [restExpr=null]
+ */
 
-function calculate (args, depth = 0) {
-  let acc = 0
-  let index = 0
-  let size = args.length
-  let operator = operators.sum
+ /*
+  PARSING EXPRESSIONS
+ */
+
+ /**
+  * Extracts first (expr) inside parentheses from an expr
+  * @param {string} expr
+  */
+function parseParensExpr(expr) {
+  const size = expr.length
+  let index = 1
+  let count = 1
   while (index < size) {
-    // case number
-    if (patterns.number.test(args[index])) {
-      acc = operator === operators.sum
-        ? acc + parseInt(args[index])
-        : acc * parseInt(args[index])
-      index++
-      continue
-    }
+    if (expr[index] === symbols.parentheses.open) { count++ }
+    if (expr[index] === symbols.parentheses.close) { count-- }
+    if (count === 0) { break }
+    index++
+  }
 
-    // case operator
-    if (patterns.operator.test(args[index])) {
-      operator = args[index] === '+'
-        ? operators.sum
-        : operators.multiplication
-      index++
-      continue
-    }
+  return expr.slice(0, index + 1)
+}
 
-    // must be case parentheses start (
-    let pos = index + 1
-    let count = 1
-    while (count > 0) {
-      if (args[pos] === parentheses.open) {
-        count++; pos++
-        continue
-      }
+/**
+ * Parse left to right expressions from an expression form
+ * expr ->
+ *  leftExpr ( [*+] rightExpr ([*+] exprRest)? )?
+ *
+ * @param {string} expr
+ * @return {LeftToRightExpressions}
+ */
+function parseLeftToRightExpressions(expr) {
+  const expressions = {
+    leftExpr: null,
+    leftToRightOperator: null,
+    rightExpr: null,
+    rightToRestOperator: null,
+    restExpr: null,
+  }
 
-      if (args[pos] === parentheses.close) {
-        count--; pos++
-        continue
-      }
+  expressions.leftExpr =
+    patterns.startsWithNumber.exec(expr)?.groups.number ?? parseParensExpr(expr)
 
-      pos++
-    }
+  /*
+    Original expr is is the same as left expr,
+    meaning this is the terminating symbol */
+  if (expressions.leftExpr === expr) {
+    return expressions
+  }
 
-    let result = calculate(
-      args.slice(index + 1, pos - 1), depth + 1
+  const { operator: leftToRightOperator, expr: rightExpr } =
+    patterns.operatorThenExpr.exec(expr.slice(expressions.leftExpr.length)).groups
+
+  expressions.leftToRightOperator = leftToRightOperator
+  expressions.rightExpr =
+    patterns.startsWithNumber.exec(rightExpr)?.groups.number ?? parseParensExpr(rightExpr)
+
+  /*
+    Original expr is is the same as right expr,
+    meaning this is the terminating symbol */
+  if (expressions.rightExpr === rightExpr) {
+    return expressions
+  }
+
+  const { operator: rightToRestOperator, expr: restExpr } =
+    patterns.operatorThenExpr.exec(rightExpr.slice(expressions.rightExpr.length)).groups
+
+  expressions.rightToRestOperator = rightToRestOperator
+  expressions.restExpr = restExpr
+
+  return expressions
+}
+
+/*
+  CALCULATING EXPRESSIONS
+*/
+
+/**
+ * @param {string} expr
+ * @return {number}
+ */
+function numberOrCalculate(expr) {
+  return patterns.startsWithNumber.test(expr)
+    ? Number.parseInt(expr)
+    : calculate(expr.slice(1, -1))
+}
+
+/**
+ *
+ * @param {number} leftExpr
+ * @param {(string|null)} operator
+ * @param {(string|null)} rightExpr
+ */
+function evaluate(leftExpr, operator, rightExpr) {
+  return operator === symbols.operators.plus
+    ? leftExpr + rightExpr
+    : leftExpr * rightExpr
+}
+
+function calculate(expr) {
+  let acc = 0
+  let operator = symbols.operators.plus
+  let nextExpr = expr
+  while (nextExpr) {
+    /* parse expressions */
+    const expressions =
+      parseLeftToRightExpressions(nextExpr)
+
+    acc = evaluate(
+      acc,
+      operator,
+      numberOrCalculate(expressions.leftExpr)
     )
 
-    // console.log({ acc, operator , result })
-    acc = operator === operators.sum
-      ? acc + result
-      : acc * result
+    if (!expressions.rightExpr) { break }
 
-    index = pos
+    acc = evaluate(
+      acc,
+      expressions.leftToRightOperator,
+      numberOrCalculate(expressions.rightExpr)
+    )
+
+    if (!expressions.restExpr) { break }
+
+    operator = expressions.rightToRestOperator
+    nextExpr = expressions.restExpr
   }
 
   return acc
 }
 
-const partOneResult =
-  program.map(args => calculate(args)).reduce((a, b) => a + b)
-console.log(`Part on result ${partOneResult}`)
+
+function calculatePartOne () {
+  return expressions
+    .map(expr => calculate(expr))
+    //.map(val => console.log(val))
+    .reduce((a, b) => a + b)
+}
+
+console.log(calculatePartOne())
+// function calculatePartTwo () {
+//   return expressions
+//     .map(line => coerceOperatorPresedencePlus(line))
+//     .map(args => calculate(args))
+//     .reduce((a, b) => a + b)
+// }
+
+// console.log(`Part one result: ${calculatePartOne()}`)
+// console.log(`Part on result: ${calculatePartTwo()}`)
+// console.log(
+//   calculate(
+//     coerce(expressions[5]).split('').filter(arg => arg.trim())
+//   )
+// )
+

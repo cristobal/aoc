@@ -106,13 +106,13 @@ function parseLeftToRightExpressions(expr) {
 */
 
 /**
- * @param {string} expr
+ * @param {string} subExpr
  * @return {number}
  */
-function numberOrCalculate(expr) {
-  return patterns.startsWithNumber.test(expr)
-    ? Number.parseInt(expr)
-    : calculate(expr.slice(1, -1))
+function calculateSubExprOrNumber(subExpr) {
+  return !patterns.startsWithNumber.test(subExpr)
+    ? calculate(subExpr.slice(1, -1))
+    : Number.parseInt(subExpr)
 }
 
 /**
@@ -121,7 +121,7 @@ function numberOrCalculate(expr) {
  * @param {(string|null)} operator
  * @param {(string|null)} rightExpr
  */
-function evaluate(leftExpr, operator, rightExpr) {
+function calculateEvaluateExpressions(leftExpr, operator, rightExpr) {
   return operator === symbols.operators.plus
     ? leftExpr + rightExpr
     : leftExpr * rightExpr
@@ -136,21 +136,21 @@ function calculate(expr) {
     const expressions =
       parseLeftToRightExpressions(nextExpr)
 
-    acc = evaluate(
+    acc = calculateEvaluateExpressions(
       acc,
       operator,
-      numberOrCalculate(expressions.leftExpr)
+      calculateSubExprOrNumber(expressions.leftExpr)
     )
 
-    if (!expressions.rightExpr) { break }
+    if (!expressions.leftToRightOperator) { break }
 
-    acc = evaluate(
+    acc = calculateEvaluateExpressions(
       acc,
       expressions.leftToRightOperator,
-      numberOrCalculate(expressions.rightExpr)
+      calculateSubExprOrNumber(expressions.rightExpr)
     )
 
-    if (!expressions.restExpr) { break }
+    if (!expressions.rightToRestOperator) { break }
 
     operator = expressions.rightToRestOperator
     nextExpr = expressions.restExpr
@@ -159,27 +159,100 @@ function calculate(expr) {
   return acc
 }
 
+/*
+  COERCE ORDER PRESEDENCE
+*/
 
+/**
+ * @param {string} subExpr
+ * @return {number}
+ */
+function coerceOrderPresedenceSubExprOrNumber(subExpr) {
+  return !patterns.startsWithNumber.test(subExpr)
+    ? `(${coerceOrderPresedence(subExpr.slice(1, -1))})`
+    : Number.parseInt(subExpr)
+}
+
+function coerceOrderPresedence(expr) {
+  const stack = []
+  let nextExpr = expr
+  while (nextExpr) {
+    /* parse expressions */
+    const expressions = parseLeftToRightExpressions(nextExpr)
+
+    /* matches case: previous expression is a sum to the current expression */
+    if (stack[stack.length - 1] === symbols.operators.plus) {
+      const [prevOperator, prevExpr] = [stack.pop(), stack.pop()]
+      stack.push(
+        `(${prevExpr} ${prevOperator} ${coerceOrderPresedenceSubExprOrNumber(expressions.leftExpr)})`
+      )
+
+      nextExpr = expressions.leftToRightOperator
+        ? `${expressions.rightExpr}${expressions.rightToRestOperator ? ` ${expressions.rightToRestOperator} ${expressions.restExpr}` : ''}`
+        : null
+
+      nextExpr
+        ? stack.push(expressions.leftToRightOperator)
+        : void 0
+
+      continue
+    }
+
+    /* matches case: number|(expr) */
+    if (!expressions.leftToRightOperator) {
+      stack.push(coerceOrderPresedenceSubExprOrNumber(expressions.leftExpr))
+      nextExpr = null
+      continue
+    }
+
+    /* matches case: number|(expr) [+*] number|(expr) */
+    if (!expressions.rightToRestOperator) {
+      expressions.leftToRightOperator === symbols.operators.plus
+        ? (stack.push(
+          `(${coerceOrderPresedenceSubExprOrNumber(expressions.leftExpr)} ${symbols.operators.plus} ${coerceOrderPresedenceSubExprOrNumber(expressions.rightExpr)})`
+          ))
+        : (stack.push(
+            coerceOrderPresedenceSubExprOrNumber(expressions.leftExpr),
+            symbols.operators.multiplication,
+            coerceOrderPresedenceSubExprOrNumber(expressions.rightExpr)
+          ))
+      nextExpr = null
+      continue
+    }
+
+    /* matches case: number|(expr) [+*] number|(expr) */
+    expressions.leftToRightOperator === symbols.operators.plus
+      ? (stack.push(
+          `(${coerceOrderPresedenceSubExprOrNumber(expressions.leftExpr)} ${symbols.operators.plus} ${coerceOrderPresedenceSubExprOrNumber(expressions.rightExpr)})`,
+          expressions.rightToRestOperator
+        ))
+      : (stack.push(
+          coerceOrderPresedenceSubExprOrNumber(expressions.leftExpr),
+          symbols.operators.multiplication,
+          coerceOrderPresedenceSubExprOrNumber(expressions.rightExpr),
+          expressions.rightToRestOperator
+        ))
+    nextExpr = expressions.restExpr
+  }
+
+  return stack.join(' ')
+}
+
+/*
+  Run Programs
+*/
 function calculatePartOne () {
   return expressions
     .map(expr => calculate(expr))
-    //.map(val => console.log(val))
     .reduce((a, b) => a + b)
 }
 
-console.log(calculatePartOne())
-// function calculatePartTwo () {
-//   return expressions
-//     .map(line => coerceOperatorPresedencePlus(line))
-//     .map(args => calculate(args))
-//     .reduce((a, b) => a + b)
-// }
+function calculatePartTwo () {
+  return expressions
+    .map(expr => coerceOrderPresedence(expr))
+    .map(expr => calculate(expr))
+    .reduce((a, b) => a + b)
+}
 
-// console.log(`Part one result: ${calculatePartOne()}`)
-// console.log(`Part on result: ${calculatePartTwo()}`)
-// console.log(
-//   calculate(
-//     coerce(expressions[5]).split('').filter(arg => arg.trim())
-//   )
-// )
-
+console.log(`Part one - result: ${calculatePartOne()}`)
+console.log(`Part two - result: ${calculatePartTwo()}`)

@@ -1,118 +1,98 @@
 #!/usr/bin/env NODE_ENV=production node
 
-function cupsFactory (labeling, max) {
-  const values = labeling.split('').map(arg => Number(arg))
+function cupsFactory (input, size) {
+  const items = Array(size + 1)
+  items[0] = 0
 
-  const head = { next: null, value: values.shift() }
-  let size = 1
+  const args = input.split('').map(arg => Number(arg))
+  const max = Math.max(...args)
+
+  let head = args.shift()
   let tail = head
-  for (const value of values) {
-    tail.next = { next: null, value }
-    tail = tail.next
-    size = size + 1
+  for (const next of args) {
+    items[tail] = next
+    tail = next
   }
 
-  if (tail.value < max) {
-    for (let value = tail.value + 1; value <= max; value++) {
-      tail.next = { next: null, value }
-      tail = tail.next
-      size = size + 1
-    }
+  for (let next = max + 1; next <= size; next++) {
+    items[tail] = next
+    tail = next
   }
 
-  tail.next = head
-  return { curr: head, size, tail }
+  items[tail] = head
+
+  return { low: 1, high: size, size, curr: head, items }
 }
 
-function print (cups) {
-  const head = cups.head
-  const labels = []
-  let next = head
-  do {
-    labels.push(next.value)
-    next = next.next
-  } while(next.value !== head.value)
-
-  console.log(labels.join(' '))
-}
-
-function collect (cups, total) {
-  let curr = cups.curr
-  let next = curr
-  do {
-    if (next.value === 1) { break }
-    next = next.next
-  } while (next.value !== curr.value)
-
+function collect (cups, from, total) {
   const values = []
+  let tail = cups.items[from]
   for (let i = 0; i < total; i++) {
-    next = next.next
-    values.push(next.value)
+    values.push(tail)
+    tail = cups.items[tail]
   }
 
   return values
 }
 
+function print (cups, from = 1) {
+  const labels = [ from ].concat(
+    collect(cups, from, cups.size - 2)
+  )
+
+  console.log(labels.join(' '))
+}
+
 function move (cups) {
-  let { curr } = cups
+  const { curr, items } = cups
 
-  // slice next three items clockwise to the head
-  let start = curr.next
-  let end   = curr.next.next.next
+  // slice next three items clockwise to current
+  const slice = [
+    items[curr],
+    items[items[curr]],
+    items[items[items[curr]]],
+  ]
 
-  // swap head.next to point to end.next of the slice
-  curr.next = end.next
-  end.next = null
+  // set current to point the value oointed by the end of the slice
+  items[curr] = items[slice[2]]
 
-  let value = curr.value - 1
-  let next  = curr.next
-  let low = {
-    dist: Number.MAX_VALUE,
-    dest: null
-  }
-
-  let high = {
-    dist: 0,
-    dest: null
-  }
-
+  // dest
+  let dest = curr - 1
   do {
-    let dist = value - next.value
-    if (dist >= 0 && dist < low.dist) {
-      low.dist = dist
-      low.dest = next
-    }
-    if (dist < 0 && dist < high.dist) {
-      high.dist = dist
-      high.dest = next
-    }
+    if (
+      (slice[0] !== dest) &&
+      (slice[1] !== dest) &&
+      (slice[2] !== dest)
+    ) { break }
 
-    if (dist === 0) { break }
+    dest--
+  } while (dest > 0)
 
-    next = next.next
-  } while (next.value !== curr.value) // full circle
+  if (dest <= 0) {
+    dest = cups.high
+    do {
+      if (
+        (slice[0] !== dest) &&
+        (slice[1] !== dest) &&
+        (slice[2] !== dest)
+      ) { break }
 
-  let dest = low.dest
-    ? low.dest
-    : high.dest
+      dest--
+    } while (dest > 0)
+  }
+
+  items[slice[2]] = items[dest]
+  items[dest] = slice[0]
 
   // console.log(
-  //   'curr', curr.value,
-  //   'dest', dest.value,
-  //   'value', value,
-  //   'low', low.map(v => v.dist),
-  //   'high', high.map(v => v.dist),
-  //   'slice', [start.value, start.next.value, end.value].join(' ')
-  //   )
-  // print(cups)
-
-  end.next = dest.next
-  dest.next = start
-
-  // print(cups)
+  //   'curr', curr,
+  //   'dest', dest,
+  //   'slice', slice
+  // )
+  // print(cups, curr)
   // console.log()
 
-  cups.curr = curr.next
+  cups.curr = items[curr]
 }
 
 function play (cups, moves) {
@@ -125,16 +105,16 @@ function partOne () {
   const cups = cupsFactory('135468729', 9)
   play(cups, 100)
 
-  const values = collect(cups, cups.size - 1)
+  const values = collect(cups, 1, cups.size - 1)
   return values.join('')
 }
 
 function partTwo () {
   const cups = cupsFactory('135468729', 1_000_000)
-  play(cups, 10_000)
+  play(cups, 10_000_000)
 
-  const values = collect(cups, 2)
-  return values.join(' ')
+  const values = collect(cups, 1, 2)
+  return `${values[0]} * ${values[1]} = ${values[0] * values[1]}`
 }
 
 console.log(`Part one: ${partOne()}`)

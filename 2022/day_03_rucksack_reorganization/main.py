@@ -1,3 +1,6 @@
+from functools import reduce
+
+
 def get_path(filename: str) -> str:
     return __file__.replace("main.py", filename)
 
@@ -34,12 +37,9 @@ def solve_part_1(lines: list[str]) -> int:
 def solve_part_2(lines: list[str]) -> int:
     items = []
     for i in range(0, len(lines), 3):
-        item = (
-            set(lines[i])
-            .intersection(set(lines[i + 1]))
-            .intersection(set(lines[i + 2]))
-            .pop()
-        )
+        item = set(
+            reduce(lambda x, y: set(x).intersection(y), lines[i : (i + 3)])
+        ).pop()
         items.append(item)
 
     priorities = [get_priority(item) for item in items]

@@ -1,7 +1,11 @@
+def get_path(filename: str) -> str:
+    return __file__.replace("main.py", filename)
+
+
 def read_values(filename: str) -> list[int]:
     values = []
     total = 0
-    for line in open(filename).readlines():
+    for line in open(get_path(filename)).readlines():
         if line == "\n":
             values.append(total)
             total = 0

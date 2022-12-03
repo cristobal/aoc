@@ -1,5 +1,8 @@
 # directories
 scratch
+.env
+.vscode 
+target
 
 # files
 .Rhistory

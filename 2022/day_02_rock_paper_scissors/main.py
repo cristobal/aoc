@@ -1,6 +1,10 @@
+def get_path(filename: str) -> str:
+    return __file__.replace("main.py", filename)
+
+
 def read_values(filename: str) -> list[str]:
     values = []
-    for line in open(filename).readlines():
+    for line in open(get_path(filename)).readlines():
         values.append(line.strip())
 
     return values

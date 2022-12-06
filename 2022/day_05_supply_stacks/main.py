@@ -1,72 +1,73 @@
 import re
+import time
 
 
 def get_path(filename: str) -> str:
     return __file__.replace("main.py", filename)
 
 
-def read_stacks(lines: list[str]) -> dict[int, list[str]]:
-    head, *tail = reversed([line.rstrip() for line in lines[0 : lines.index("\n")]])
+def read_stacks(lines: list[str]) -> list[list[str]]:
+    prog = re.compile(r"[A-Z]")
 
-    # find labels
-    prog = re.compile(r"\d")
-    labels = [int(label) for label in prog.findall(head)]
+    stacks: list[list[str]] = []
+    size: int = 0
+    while line := lines.pop(0):
+        # terminal symbol
+        if prog.search(line) is None and line.rstrip() == "":
+            break
 
-    # initialize stacks
-    stacks: dict[int, list[str]] = dict()
-    for label in labels:
-        stacks[label] = []
+        for match in prog.finditer(line):
+            start = match.start()
+            index = int((start - 1) / 4)
 
-    # populate stacks
-    for line in tail:
-        for (index, label) in enumerate(labels):
-            value = line[1 + (4 * index)]
-            if value != " ":
-                stacks[label].append(value)
+            # append missing stacks dynamically
+            if size < (index + 1):
+                for _ in range(0, (index - size) + 1):
+                    stacks.append([])
+                    size = size + 1
+
+            stacks[index].insert(0, line[start])
 
     return stacks
 
 
 def read_moves(lines: list[str]) -> list[list[int]]:
     prog = re.compile(r"\d+")
-
-    moves: list[list[int]] = []
-    for line in [line.rstrip() for line in lines[lines.index("\n") + 1 :]]:
-        moves.append([int(arg) for arg in prog.findall(line)])
-
-    return moves
+    return [[int(arg) for arg in prog.findall(line)] for line in lines]
 
 
-def solve_part_1(stacks: dict[int, list[str]], moves: list[list[int]]) -> str:
-    for (total, src, dest) in moves:
-        for _ in range(0, total):
-            value = stacks[src].pop()
-            stacks[dest].append(value)
+def solve_part_1(stacks: list[list[str]], moves: list[list[int]]) -> str:
+    for [crates, src, dst] in moves:
+        for _ in range(0, crates):
+            stacks[dst - 1].append(stacks[src - 1].pop())
 
-    values = [stacks[label][len(stacks[label]) - 1] for (_, label) in enumerate(stacks)]
+    values = [stacks[i][len(stacks[i]) - 1] for (i, _) in enumerate(stacks)]
     return "".join(values)
 
 
-def solve_part_2(stacks: dict[int, list[str]], moves: list[list[int]]) -> str:
-    for (total, src, dest) in moves:
-        values = [stacks[src].pop() for _ in range(0, total)]
-        for value in reversed(values):
-            stacks[dest].append(value)
+def solve_part_2(stacks: list[list[str]], moves: list[list[int]]) -> str:
+    for [crates, src, dst] in moves:
+        index = len(stacks[src - 1]) - crates
+        for _ in range(0, crates):
+            stacks[dst - 1].append(stacks[src - 1].pop(index))
 
-    values = [stacks[label][len(stacks[label]) - 1] for (_, label) in enumerate(stacks)]
+    values = [stacks[i][len(stacks[i]) - 1] for (i, _) in enumerate(stacks)]
     return "".join(values)
 
 
 def main():
-    lines = open(get_path("input.txt")).readlines()
+    # path = get_path("bigboy.txt")
+    path = get_path("input.txt")
 
-    stacks = read_stacks(lines)
-    moves = read_moves(lines)
-    print(f"Solution 1: {solve_part_1(stacks, moves)}")
+    start = time.perf_counter()
+    lines = open(path, "r", encoding="utf-8").readlines()
+    value = solve_part_1(read_stacks(lines), read_moves(lines))
+    print(f"Solution 1: {value} (took: {time.perf_counter() - start}s)")
 
-    stacks = read_stacks(lines)
-    moves = read_moves(lines)
-    print(f"Solution 2: {solve_part_2(stacks, moves)}")
+    start = time.perf_counter()
+    lines = open(path, "r", encoding="utf-8").readlines()
+    value = solve_part_2(read_stacks(lines), read_moves(lines))
+    print(f"Solution 2: {value} (took: {time.perf_counter() - start}s")
 
 
 if __name__ == "__main__":

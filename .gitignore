@@ -3,6 +3,8 @@ scratch
 .env
 .vscode 
 target
+_dist
 
 # files
 .Rhistory
+bigboy.txt

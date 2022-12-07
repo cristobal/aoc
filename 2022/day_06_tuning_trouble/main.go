@@ -60,7 +60,7 @@ func main() {
 	*/
 	start := time.Now()
 	datastream, _ := os.ReadFile("bigboy.txt")
-	fmt.Printf("Reading file (took: %s)\n", time.Since(start))
+	fmt.Printf("Read file (took: %s)\n", time.Since(start))
 
 	start = time.Now()
 	fmt.Printf("find_marker(datastream, 4) => %v (took: %s)\n", find_marker(datastream, 4), time.Since(start))

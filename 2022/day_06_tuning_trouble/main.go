@@ -8,20 +8,25 @@ import (
 )
 
 func find_marker(datastream []byte, window_size int) int {
+	// b'a' => 97
 	offset := 97
+	// counter table for how many times we have seen each character
 	counter := [26]int{}
-
+	// initialize every counter[char] to zero
 	for _, char := range "abcdefghijklmnopqrstuvwxyz" {
 		counter[int(char)-offset] = 0
 	}
 
+	// count unique characters seen
+	unique := 0
+
+	// set up start window from 0..window_size
 	pos := 0
-	total := 0
 	for pos < window_size {
 		char := int(datastream[pos]) - offset
 		counter[char] = counter[char] + 1
 		if counter[char] == 1 {
-			total++
+			unique++
 		}
 		pos++
 	}
@@ -32,16 +37,17 @@ func find_marker(datastream []byte, window_size int) int {
 		old_char := int(datastream[pos-window_size]) - offset
 		counter[old_char] = counter[old_char] - 1
 		if counter[old_char] == 0 {
-			total--
+			unique--
 		}
 
 		char := int(datastream[pos]) - offset
 		counter[char] = counter[char] + 1
 		if counter[char] == 1 {
-			total++
+			unique++
 		}
 
-		if total == window_size {
+		// terminal symbol unique characters matches window_size
+		if unique == window_size {
 			return pos + 1
 		}
 
@@ -51,6 +57,8 @@ func find_marker(datastream []byte, window_size int) int {
 	return -1
 }
 
+// run with
+// > go run main.go
 func main() {
 	/*
 	   url:    https://0x0.st/ods8.txt.7z

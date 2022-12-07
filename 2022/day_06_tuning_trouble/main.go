@@ -8,16 +8,17 @@ import (
 )
 
 func find_marker(datastream []byte, window_size int) int {
-	counter := map[byte]int{}
+	offset := 97
+	counter := [26]int{}
 
 	for _, char := range "abcdefghijklmnopqrstuvwxyz" {
-		counter[byte(char)] = 0
+		counter[int(char)-offset] = 0
 	}
 
 	pos := 0
 	total := 0
 	for pos < window_size {
-		char := datastream[pos]
+		char := int(datastream[pos]) - offset
 		counter[char] = counter[char] + 1
 		if counter[char] == 1 {
 			total++
@@ -28,13 +29,13 @@ func find_marker(datastream []byte, window_size int) int {
 	size := binary.Size(datastream)
 	for pos < size {
 		// cleanup
-		old_char := datastream[pos-window_size]
+		old_char := int(datastream[pos-window_size]) - offset
 		counter[old_char] = counter[old_char] - 1
 		if counter[old_char] == 0 {
 			total--
 		}
 
-		char := datastream[pos]
+		char := int(datastream[pos]) - offset
 		counter[char] = counter[char] + 1
 		if counter[char] == 1 {
 			total++

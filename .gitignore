@@ -8,3 +8,5 @@ _dist
 # files
 .Rhistory
 bigboy.txt
+*_exp.py
+test.py

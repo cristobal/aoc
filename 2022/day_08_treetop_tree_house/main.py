@@ -76,7 +76,7 @@ def solve_part_one(tree_map: TreeMap) -> int:
             total = total + 1
             continue
 
-        # check west
+        # check east
         if solve_part_one_highest_treetop_in_range(
             treetop_height,
             coords,
@@ -92,7 +92,7 @@ def solve_part_one(tree_map: TreeMap) -> int:
             total = total + 1
             continue
 
-        # check east
+        # check west
         if solve_part_one_highest_treetop_in_range(
             treetop_height, coords, range(i - 1, (width * int(i / width)) - 1, -1)
         ):

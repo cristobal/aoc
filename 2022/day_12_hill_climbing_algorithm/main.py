@@ -1,3 +1,4 @@
+# @see https://www.redblobgames.com/pathfinding/a-star/implementation.html#python-astar
 import heapq
 
 START_POINT = ord("S")

@@ -4,9 +4,11 @@ scratch
 .vscode 
 target
 _dist
+__pycache__
 
 # files
 .Rhistory
 bigboy.txt
 *_exp.py
 test.py
+test.txt

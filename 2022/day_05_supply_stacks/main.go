@@ -41,7 +41,7 @@ func read_stacks_of_crates(datastream []byte) StacksOfCrates {
 				}
 			}
 
-			// append new crate onto the stacks lists
+			// append new crate onto the crates lists
 			crates = append(crates, -1)
 
 			// append corresponding value at same index
@@ -163,8 +163,8 @@ func solve_part_one(data StacksOfCrates, datastream []byte) string {
 	}
 
 	args := make([]byte, len(stacks))
-	for i, head := range stacks {
-		args[i] = data.values[head]
+	for i, stack := range stacks {
+		args[i] = data.values[stack]
 	}
 
 	return string(args[:])
@@ -244,8 +244,8 @@ func solve_part_two(data StacksOfCrates, datastream []byte) string {
 	}
 
 	args := make([]byte, len(stacks))
-	for i, head := range stacks {
-		args[i] = data.values[head]
+	for i, stack := range stacks {
+		args[i] = data.values[stack]
 	}
 
 	return string(args[:])

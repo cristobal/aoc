@@ -1,132 +1,251 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"os"
-	"regexp"
-	"strconv"
-	"strings"
 	"time"
 )
 
-type Crates struct {
-	headers []int
-	stacks  []int
-	values  []byte
-	index   int
+type StacksOfCrates struct {
+	stacks []int
+	crates []int
+	values []byte
+	index  int
 }
 
-func read_crates(lines []string) Crates {
-	prog := regexp.MustCompile("[A-Z]")
-
-	// crates headers
-	headers := []int{}
-	// crates stacks
+func read_stacks_of_crates(datastream []byte) StacksOfCrates {
+	// stacks
 	stacks := []int{}
-	// crates character value
+	// crates
+	crates := []int{}
+	// crates character values
 	values := []byte{}
 
 	size := 0
-	index := 0
-	for ok := true; ok; index++ {
-		line := lines[index]
-		if prog.MatchString(line) == false && strings.TrimSuffix(line, "\n") == "" {
+	index := 1
+	for stack, ok := 0, true; ok; index += 4 {
+		// stop reading crates when we reach the number 1 stack index
+		// which wil be the line with all the stack indexes
+		if datastream[index] == 49 {
 			break
 		}
 
-		for _, match := range prog.FindAllStringIndex(line, -1) {
-			start := match[0]
-			crate := int((start - 1) / 4)
-
-			// append missing crates indexes dynamically
-			if size < (crate + 1) {
-				for i, N := 0, (crate-size)+1; i < N; i++ {
-					headers = append(headers, -1)
+		// only process value if in the char range A..Z
+		value := datastream[index]
+		if value >= 65 && value <= 90 {
+			// append missing stack indexes dynamically
+			if size < (stack + 1) {
+				for i, N := 0, (stack-size)+1; i < N; i++ {
+					stacks = append(stacks, -1)
 					size = size + 1
 				}
 			}
 
 			// append new crate onto the stacks lists
-			stacks = append(stacks, -1)
+			crates = append(crates, -1)
 
 			// append corresponding value at same index
-			values = append(values, line[start])
+			values = append(values, value)
 
 			// resolve head
-			head := headers[crate]
+			head := stacks[stack]
 
 			// resolve tail
-			tail := len(stacks) - 1
+			tail := len(crates) - 1
 
 			// no previous header set new head
 			if head == -1 {
-				headers[crate] = tail
-				continue
-			}
-
-			for ptr, ok := head, true; ok; ptr = stacks[ptr] {
-				// update ptr to point to new tail
-				if stacks[ptr] == -1 {
-					stacks[ptr] = tail
-					break
+				stacks[stack] = tail
+			} else {
+				for ptr, ok := head, true; ok; ptr = crates[ptr] {
+					// update ptr to point to new tail
+					if crates[ptr] == -1 {
+						crates[ptr] = tail
+						break
+					}
 				}
 			}
 		}
-	}
 
-	return Crates{headers, stacks, values, index + 1}
-}
-
-func read_lines(path string) ([]string, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	lines := []string{}
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		lines = append(lines, scanner.Text())
-	}
-
-	return lines, scanner.Err()
-}
-
-func solve_part_one(crates Crates, lines []string) string {
-	// prog := regexp.MustCompile("\\d+")
-
-	headers := make([]int, len(crates.headers))
-	copy(headers, crates.headers)
-	stacks := make([]int, len(crates.stacks))
-	copy(stacks, crates.stacks)
-
-	for i, N := crates.index, len(lines); i < N; i++ {
-		// args := prog.FindAllString(lines[i], -1)
-		args := strings.Fields(lines[i])
-		moves, _ := strconv.Atoi(args[0])
-		src_head, _ := strconv.Atoi(args[1])
-		src_head--
-		dst_head, _ := strconv.Atoi(args[2])
-		dst_head--
-		// fmt.Println(moves, src_head, dst_head)
-		for m, M := 0, moves; m < M; m++ {
-			// store position in stack
-			tmp := headers[src_head]
-			// set new head to what the tmp stack pointed to
-			headers[src_head] = stacks[tmp]
-
-			// update stack to point current head in dst stack
-			stacks[tmp] = headers[dst_head]
-			// set new dst header
-			headers[dst_head] = tmp
+		// set crate index
+		if datastream[index+2] == 10 {
+			stack = 0
+		} else {
+			stack++
 		}
 	}
 
-	args := make([]byte, len(headers))
-	for i, head := range headers {
-		args[i] = crates.values[head]
+	for ok := true; ok; index++ {
+		// stop when next char is 'm' with ascii code 49
+		// which is the start of the word move
+		if datastream[index+1] == 109 {
+			break
+		}
+	}
+
+	return StacksOfCrates{stacks, crates, values, index}
+}
+
+func solve_part_one(data StacksOfCrates, datastream []byte) string {
+	stacks := make([]int, len(data.stacks))
+	copy(stacks, data.stacks)
+	crates := make([]int, len(data.crates))
+	copy(crates, data.crates)
+
+	N := len(datastream)
+	offset := 48
+	for index, ok := data.index, true; ok; {
+		index += 6
+		// read moves
+		moves := int(datastream[index]) - offset
+		if datastream[index+1] > 32 {
+			index += 1
+			moves *= 10
+			moves += int(datastream[index]) - offset
+		}
+		if datastream[index+1] > 32 {
+			index += 1
+			moves *= 10
+			moves += int(datastream[index]) - offset
+		}
+		if datastream[index+1] > 32 {
+			index += 1
+			moves *= 10
+			moves += int(datastream[index]) - offset
+		}
+		index += 7
+
+		// read from
+		from := int(datastream[index]) - offset
+		if datastream[index+1] > 32 {
+			index += 1
+			from *= 10
+			from += int(datastream[index]) - offset
+		}
+		if datastream[index+1] > 32 {
+			index += 1
+			from *= 10
+			from += int(datastream[index]) - offset
+		}
+		index += 5
+
+		// read to
+		to := int(datastream[index]) - offset
+		if ((index + 1) < N) && datastream[index+1] > 32 {
+			index += 1
+			to *= 10
+			to += int(datastream[index]) - offset
+		}
+		if ((index + 1) < N) && datastream[index+1] > 32 {
+			index += 1
+			to *= 10
+			to += int(datastream[index]) - offset
+		}
+		index += 1
+
+		// from and to are zero based indexes
+		// move one and one crate from one stack to another
+		for m, M := 0, moves; m < M; m++ {
+			// store position in stack
+			tmp := stacks[from-1]
+			// set new head to what the tmp stack pointed to
+			stacks[from-1] = crates[tmp]
+
+			// update stack to point current head in dst stack
+			crates[tmp] = stacks[to-1]
+			// set new dst header
+			stacks[to-1] = tmp
+		}
+
+		if (index + 6) > N {
+			break
+		}
+	}
+
+	args := make([]byte, len(stacks))
+	for i, head := range stacks {
+		args[i] = data.values[head]
+	}
+
+	return string(args[:])
+}
+
+func solve_part_two(data StacksOfCrates, datastream []byte) string {
+	stacks := make([]int, len(data.stacks))
+	copy(stacks, data.stacks)
+	crates := make([]int, len(data.crates))
+	copy(crates, data.crates)
+
+	N := len(datastream)
+	offset := 48
+	for index, ok := data.index, true; ok; {
+		index += 6
+		// read moves
+		moves := int(datastream[index]) - offset
+		if datastream[index+1] > 32 {
+			index += 1
+			moves *= 10
+			moves += int(datastream[index]) - offset
+		}
+		if datastream[index+1] > 32 {
+			index += 1
+			moves *= 10
+			moves += int(datastream[index]) - offset
+		}
+		if datastream[index+1] > 32 {
+			index += 1
+			moves *= 10
+			moves += int(datastream[index]) - offset
+		}
+		index += 7
+
+		// read from
+		from := int(datastream[index]) - offset
+		if datastream[index+1] > 32 {
+			index += 1
+			from *= 10
+			from += int(datastream[index]) - offset
+		}
+		if datastream[index+1] > 32 {
+			index += 1
+			from *= 10
+			from += int(datastream[index]) - offset
+		}
+		index += 5
+
+		// read to
+		to := int(datastream[index]) - offset
+		if ((index + 1) < N) && datastream[index+1] > 32 {
+			index += 1
+			to *= 10
+			to += int(datastream[index]) - offset
+		}
+		if ((index + 1) < N) && datastream[index+1] > 32 {
+			index += 1
+			to *= 10
+			to += int(datastream[index]) - offset
+		}
+		index += 1
+
+		// from and to are zero based indexes
+		// find start:end slice of crates that we are moving from one stack to another
+		start := stacks[from-1]
+		end := start
+		for m, M := 0, (moves - 1); m < M; m++ {
+			end = crates[end]
+		}
+		stacks[from-1] = crates[end]
+		crates[end] = stacks[to-1]
+		stacks[to-1] = start
+
+		if (index + 6) > N {
+			break
+		}
+	}
+
+	args := make([]byte, len(stacks))
+	for i, head := range stacks {
+		args[i] = data.values[head]
 	}
 
 	return string(args[:])
@@ -136,19 +255,25 @@ func solve_part_one(crates Crates, lines []string) string {
 // > go run main.go
 func main() {
 	/*
-	   url:    https://0x0.st/okDo.txt.7z
-	   bytes:  96M
-	   silver: 85760445
-	   gold:   91845017
+		url:          https://0x0.st/okDo.txt.7z
+		bytes:        113M
+		crates:       10K
+		stacks:       200
+		instructions: 5M
+		silver: QXWMZOHQIIZEXDCDVRDNYITZTKISAVCDLWNKVBQNGFDXXZKZRUOQAMKJOFOPFFTWQIIVMFOOSGTCLHPXNVRRUIBBPSHGFGULNFAUDSAVQDOMYTPVITJAPYJHZLXGEXCQUGXAPFUCPOZJUDLJSWEJPHWCDWKARGOPMKZRHVDUTHVAVXNUWOODGHEXBIXORGRWPTOPQHEW
+		gold: MPRUXFCQFSPJULHGIRCZXCLTVKNUSSCDVWTWOUHSIEBAXFCRMUVZAMBDGLMPCAUXQAIVOXFCSPBTRIPBNKAUKIKBAVNKWKBBDDSIAQNXQJQTKLSNQXMJYIJXAHBEGSJWIAFADPGBECLDRJVRZCVKGHWVZMBAOGGGHAARNZOWPISKTVNUMKACYHXXACEMTGBTTWYPUWSD
 	*/
 	start := time.Now()
-	lines, _ := read_lines("bigboy.txt")
-	fmt.Printf("Read file (lines: %d) (took: %s)\n", len(lines), time.Since(start))
+	datastream, _ := os.ReadFile("bigboy.txt")
+	fmt.Printf("Read bytes (total: %d) (took: %s)\n", len(datastream), time.Since(start))
 
 	start = time.Now()
-	crates := read_crates(lines)
-	fmt.Printf("Reading Creates (took: %s)\n", time.Since(start))
+	data := read_stacks_of_crates(datastream)
+	fmt.Printf("Reading Crates (stacks: %d) (crates: %d) (took: %s)\n", len(data.stacks), len(data.crates), time.Since(start))
 
 	start = time.Now()
-	fmt.Printf("solve_part_one(crates, lines) => %s (took: %s)\n", solve_part_one(crates, lines), time.Since(start))
+	fmt.Printf("Solution 1: %s (took: %s)\n", solve_part_one(data, datastream), time.Since(start))
+
+	start = time.Now()
+	fmt.Printf("Solution 2: %s (took: %s)\n", solve_part_two(data, datastream), time.Since(start))
 }

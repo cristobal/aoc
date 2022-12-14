@@ -90,7 +90,7 @@ unsafe fn read_stacks_of_crates(datastream: &Vec<u8>) -> StacksOfCrates {
 
     let ok = true;
     while ok {
-        // stop when next char is 'm' with ascii code 49
+        // stop when next char is 'm' with ascii code 109
         // which is the start of the word move
         if datastream[index+1] == 109 {
             break
@@ -305,6 +305,5 @@ fn main() {
         
         start = Instant::now();
         println!("Solution 2: {} (took: {:?})", solve_part_two(&data, &datastream), start.elapsed());
-
     }
 }

@@ -76,7 +76,7 @@ func read_stacks_of_crates(datastream []byte) StacksOfCrates {
 	}
 
 	for ok := true; ok; index++ {
-		// stop when next char is 'm' with ascii code 49
+		// stop when next char is 'm' with ascii code 109
 		// which is the start of the word move
 		if datastream[index+1] == 109 {
 			break

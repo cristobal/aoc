@@ -1,23 +1,47 @@
+fun chr_to_val(chr: char): int =
+  case chr of
+    (* the open parens ( char *)
+      #"(" => 1
+    (* the close parens ) char *)
+    | #")" => ~1
+    (* null byte perhaps? *)
+    | _ => 0
+;
+
+(*
+  Santa is trying to deliver presents in a large apartment building, but he can't find the right floor - 
+  the directions he got are a little confusing. 
+  
+  He starts on the ground floor (floor 0) and then follows the instructions one character at a time.
+  An opening parenthesis, (, means he should go up one floor, and a closing parenthesis, ), 
+  means he should go down one floor.
+*)
 fun part_one(chars: char list): int =
   let
-    val values = map (fn (chr) =>
-      (* the open parens ( char *)
-      if Char.compare(chr, #"(") = EQUAL then 
-        1
-      (* the close parens ) char *)
-      else if Char.compare(chr, #")") = EQUAL then 
-        ~1
-      (* null byte perhaps? *)
-      else
-        0
-    ) chars
+    fun reducer(chr: char, acc: int): int = 
+      acc + chr_to_val(chr)
   in
-    foldl op+ 0 values
+    foldl reducer 0 chars
   end
 ;
 
-fun part_two(char: char list) int =
-  0
+(*
+  Now, given the same instructions, find the position of the first character that causes him to 
+  enter the basement (floor -1).
+*)
+fun part_two(chars: char list): int =
+  let
+    val basement = ~1
+    fun loop([]: char list, _: int, index: int): int = index
+      | loop(chr::chars', acc: int, index: int): int =
+        if (acc = basement, index <> 0) = (true, true) then
+          loop([], acc, index)
+        else
+          loop(chars', acc + chr_to_val(chr), index + 1)
+  in 
+    loop(chars, 0, 0)
+  end
+;
 
 (* 
   1. open input file 
@@ -33,3 +57,6 @@ val chars = explode line;
 
 (* Solution 1 *)
 print ("Solution 1: " ^ Int.toString(part_one(chars)) ^ "\n");
+
+(* Solution 2 *)
+print ("Solution 2: " ^ Int.toString(part_two(chars)) ^ "\n");

@@ -1,4 +1,4 @@
-use "../utils/utils.sml";
+use "utils/utils.sml";
 
 datatype dimension = Dimension of int * int * int;
 
@@ -57,7 +57,7 @@ fun part_two(dimensions: dimension list): int =
   2. read lines
   3. transform to dimensions
 *)
-val stream     = TextIO.openIn "input.txt";
+val stream     = TextIO.openIn "day_02_i_was_told_there_would_be_no_math/input.txt";
 val lines      = read_lines(stream);
 val dimensions = to_dimensions(lines);
 

@@ -1,11 +1,11 @@
+use "utils/utils.sml";
+
 fun chr_to_val(chr: char): int =
   case chr of
     (* the open parens ( char *)
       #"(" => 1
     (* the close parens ) char *)
     | #")" => ~1
-    (* null byte perhaps? *)
-    | _ => 0
 ;
 
 (*
@@ -48,11 +48,9 @@ fun part_two(chars: char list): int =
   2. extract first line
   3. get chars array
 *)
-val stream = TextIO.openIn "input.txt";
-val line = Option.getOpt(
-  TextIO.inputLine stream, ""
-);
-val chars = explode line;
+val stream = TextIO.openIn "day_01_not_quite_lisp/input.txt";
+val input  = List.nth(read_lines(stream), 0);
+val chars = explode input;
 
 
 (* Solution 1 *)

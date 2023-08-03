@@ -5,7 +5,7 @@ fun read_lines(stream: TextIO.instream): string list =
         (* no lines left to read *)
           NONE => xs
         (* parsed a line, append to list and parse next line if available *)
-        | SOME line => read_lines'(xs @ [trim_end(line)])
+        | SOME line => read_lines'(xs @ [trim_end line])
   in
-    read_lines'([])
+    read_lines' []
   end

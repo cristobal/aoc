@@ -16,7 +16,7 @@ fun trim_end(value: string): string =
       value, 
       0,
       loop(
-        (size value)
+        size value
       )
     )
   end

@@ -6,7 +6,9 @@ fun chr_to_val(chr: char): int =
       #"(" => 1
     (* the close parens ) char *)
     | #")" => ~1
-;
+    (* *)
+    | _ => 0
+
 
 (*
   Santa is trying to deliver presents in a large apartment building, but he can't find the right floor - 
@@ -16,14 +18,14 @@ fun chr_to_val(chr: char): int =
   An opening parenthesis, (, means he should go up one floor, and a closing parenthesis, ), 
   means he should go down one floor.
 *)
-fun part_one(chars: char list): int =
+fun part_one (chars: char list): int =
   let
     fun reducer(chr: char, acc: int): int = 
-      acc + chr_to_val(chr)
+      acc + (chr_to_val chr)
   in
     foldl reducer 0 chars
   end
-;
+
 
 (*
   Now, given the same instructions, find the position of the first character that causes him to 
@@ -37,24 +39,24 @@ fun part_two(chars: char list): int =
         if (acc = basement, index <> 0) = (true, true) then
           loop([], acc, index)
         else
-          loop(chars', acc + chr_to_val(chr), index + 1)
+          loop(chars', acc + (chr_to_val chr), index + 1)
   in 
     loop(chars, 0, 0)
   end
-;
+
 
 (* 
   1. open input file 
   2. extract first line
   3. get chars array
 *)
-val stream = TextIO.openIn "day_01_not_quite_lisp/input.txt";
-val input  = List.nth(read_lines(stream), 0);
-val chars = explode input;
-
+val stream = TextIO.openIn "day_01_not_quite_lisp/input.txt"
+val input  = List.nth((read_lines stream), 0)
+val chars = (explode input);
 
 (* Solution 1 *)
-print ("Solution 1: " ^ Int.toString(part_one(chars)) ^ "\n");
+print ("Solution 1: " ^ (Int.toString (part_one chars)) ^ "\n");
 
 (* Solution 2 *)
-print ("Solution 2: " ^ Int.toString(part_two(chars)) ^ "\n");
+print ("Solution 2: " ^ (Int.toString (part_two chars)) ^ "\n");
+

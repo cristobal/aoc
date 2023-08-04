@@ -6,9 +6,8 @@ fun chr_to_val(chr: char): int =
       #"(" => 1
     (* the close parens ) char *)
     | #")" => ~1
-    (* *)
-    | _ => 0
-
+    (* unexpected chr *)
+    | _ => raise Fail ("Unexpected chr: " ^ (Char.toString chr))
 
 (*
   Santa is trying to deliver presents in a large apartment building, but he can't find the right floor - 

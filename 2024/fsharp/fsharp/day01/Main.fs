@@ -1,7 +1,6 @@
 ﻿open System.IO
 open System.Text.RegularExpressions  // for Regex
 
-
 let readValues () : int list * int list =
   // read values from file
   let pattern = Regex(@"(\d+)\s+(\d+)")
@@ -36,7 +35,6 @@ let solutionTwo (left: int list, right: int list): unit =
         |> List.filter ((=) value)
         |> List.length
     score <- score + value * total
-
   printfn $"Similarity score between lists => {score}"
 
 let left, right = readValues()

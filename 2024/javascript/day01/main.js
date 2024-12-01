@@ -1,9 +1,9 @@
 import { readFileSync } from 'node:fs';
 
+// Read values from file
 const lines = readFileSync('./input.txt')
   .toString()
   .split('\n');
-
 const left = /** @type {number[]} */ ([]);
 const right = /** @type {number[]} */([]);
 const pattern = /(\d+)\s+(\d+)/;
@@ -17,21 +17,21 @@ for(const line of lines) {
   right.push(Number(match[2]));
 }
 
+// sort lists
 const leftSorted = left.toSorted((a, b) => a - b);
 const rightSorted = right.toSorted((a, b) => a - b);
 
-const distances =  /** @type {number[]} */([]);
-for (let i = 0, size = leftSorted.length; i < size; i++) {
-  distances.push(Math.abs(leftSorted[i] - rightSorted[i]));
-}
+// distance
+const distance =
+  leftSorted
+    .map((_, index) => Math.abs(leftSorted[index] - rightSorted[index]))
+    .reduce((a, b) => a + b)
+console.log(`Solution 1: Distance between lists: ${distance}`);
 
-console.log(distances.reduce((a, b) => a + b));
-
-let sum = 0;
+// score
+let score = 0;
 for (const value of leftSorted) {
   const total = rightSorted.filter((candidate) => candidate === value).length;
-  const score = value * total;
-  sum += score;
+  score += value * total;
 }
-
-console.log(sum);
+console.log(`Solution 2: Similarity score between lists: ${score}`);

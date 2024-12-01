@@ -20,6 +20,7 @@ let readValues () : int list * int list =
   (List.sort left, List.sort right)
  
 let solutionOne (left: int list, right: int list): unit =
+  // Calculate distance between lists
   let distance =
     List.zip left right
       |> List.map (fun (l, r) -> abs(l - r))

@@ -1,8 +1,7 @@
 ﻿open System.IO
-open System.Text.RegularExpressions  // for Regex
+open System.Text.RegularExpressions
 
 let readValues () : int list * int list =
-  // read values from file
   let pattern = Regex(@"(\d+)\s+(\d+)")
   let left, right =
     File.ReadLines($"{__SOURCE_DIRECTORY__}/input.txt")

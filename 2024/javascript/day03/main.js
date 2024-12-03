@@ -1,31 +1,30 @@
 import { readFileSync } from 'node:fs';
 
-// Read values from file
 const input = readFileSync('./input.txt').toString();
 
-let sum = 0;
-const pattern = /mul\((\d+),(\d+)\)/g;
-for (const match of input.matchAll(pattern)) {
-  sum += Number(match[1]) * Number(match[2])
-}
-console.log(sum);
+// Solution One
+const solutionOneSum =
+  input.matchAll(/mul\((\d+),(\d+)\)/g)
+    .map(([, first, second]) => Number(first) * Number(second))
+    .reduce((a, b) => a + b);
+console.log(`Solution 1: ${solutionOneSum}`);
 
-let sum2 = 0;
-let enabled = true;
-const pattern2 = /(do|don\'t)\(\)|mul\((\d+),(\d+)\)/g;
-for (const match of input.matchAll(pattern2)) {
-  if (match[1] === "don't") {
-    enabled = false;
-    continue;
-  } 
-  if (match[1] === "do") {
-    enabled = true;
+// Solution Two
+let instructionEnabled = true;
+let solutionTwoSum = 0;
+for (const [, instr, first, second] of input.matchAll(/(do|don\'t)\(\)|mul\((\d+),(\d+)\)/g)) {
+  if (instr === 'don\'t') {
+    instructionEnabled = false;
     continue;
   }
-  if (!enabled) {
+  if (instr === 'do') {
+    instructionEnabled = true;
     continue;
   }
-  // console.log(match[1], match[2])
-  sum2 += Number(match[2]) * Number(match[3])
+  if (!instructionEnabled) {
+    continue;
+  }
+
+  solutionTwoSum += Number(first) * Number(second);
 }
-console.log(sum2);
+console.log(`Solution 2: ${solutionTwoSum}`);

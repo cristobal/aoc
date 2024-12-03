@@ -5,7 +5,7 @@ let input = File.ReadAllText($"{__SOURCE_DIRECTORY__}/input.txt")
 
 // Solution One
 let solutionOneSum =
-    Regex.Matches(input, @"mul\((\d+),(\d+)\)")
+    Regex.Matches(input, @"mul\((\d{1,3}),(\d{1,3})\)")
       |> Seq.map (fun m -> 
           let first = int m.Groups.[1].Value
           let second = int m.Groups.[2].Value
@@ -16,7 +16,7 @@ printfn $"Solution 1: ${solutionOneSum}"
 // Solution Two
 let mutable instructionEnabled = true
 let mutable solutionTwoSum = 0
-for m in Regex.Matches(input, @"(do|don't)\(\)|mul\((\d+),(\d+)\)") do
+for m in Regex.Matches(input, @"(do|don't)\(\)|mul\((\d{1,3}),(\d{1,3})\)") do
     let groups = m.Groups
     match groups.[1].Value with
     | "don't" -> 

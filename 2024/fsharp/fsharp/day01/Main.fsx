@@ -39,3 +39,5 @@ let solutionTwo (left: int list, right: int list): unit =
 let left, right = readValues()
 solutionOne(left, right)
 solutionTwo(left, right)
+
+exit 0

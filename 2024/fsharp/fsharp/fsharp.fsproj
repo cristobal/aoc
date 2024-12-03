@@ -6,8 +6,10 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Compile Include="day01\Main.fs" />
+        <None Include="day01\Main.fsx" />
         <Content Include="day01\input.txt" />
+        <None Include="day03\Main.fsx" />
+        <Content Include="day03\input.txt" />
     </ItemGroup>
 
 </Project>

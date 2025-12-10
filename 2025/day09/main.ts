@@ -11,12 +11,9 @@ type Edge = {
   type: 'vertical' | 'horizontal';
 }
 
-type Corners = [Pos, Pos, Pos, Pos];
-
 type Rectangle = {
   from: Pos;
   to: Pos;
-  corners: Corners;
   width: number;
   height: number;
   area: number;
@@ -41,52 +38,12 @@ function calculate_rectangle(from: Pos, to: Pos): Rectangle {
     Math.abs(from.y - to.y) + 1,
   ];
 
-  const corners = [
-    // top left
-    {
-      y: Math.min(from.y, to.y),
-      x: Math.min(from.x, to.x),
-    },
-    // top right
-    {
-      y: Math.min(from.y, to.y),
-      x: Math.max(from.x, to.x),
-    },
-    // bottom left
-    {
-      y: Math.max(from.y, to.y),
-      x: Math.min(from.x, to.x),
-    },
-    // bottom left
-    {
-      y: Math.max(from.y, to.y),
-      x: Math.max(from.x, to.x),
-    },
-  ] as Corners;
-
   return {
     from,
     to,
-    corners,
     width,
     height,
     area: width * height
-  }
-}
-
-function calculate_line(from: Pos, to: Pos): Edge {
-  if (from.y === to.y) {
-    return {
-      from: from.x < to.x ? from : to,
-      to: from.x < to.x ? to : from,
-      type: 'horizontal'
-    }
-  }
-
-  return {
-    from: from.y < to.y ? from : to,
-    to: from.y < to.y ? to : from,
-    type: 'vertical'
   }
 }
 
@@ -126,49 +83,58 @@ function find_edges(positions: Pos[]): Edge[]  {
   return edges;
 }
 
-function find_vertical_boxes(edges: Edge[]) {
-
-}
-
 function solve_solution_one(positions: Pos[]): number {
   let rectangles = find_rectangles(positions);
   let sorted = rectangles.toSorted((a, b) => b.area - a.area);
   return sorted[0].area;
 }
 
+// https://en.wikipedia.org/wiki/Intersection_(geometry)#Two_lines
+// https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection
+function is_edge_inside_rectangle(edge: Edge, rectangle: Rectangle): boolean {
+  // Rectangle A (top left) - B - C - D (bottom right)
+  let Ay = Math.min(rectangle.from.y, rectangle.to.y);
+  let Ax = Math.min(rectangle.from.x, rectangle.to.x);
+
+  let Dy = Math.max(rectangle.from.y, rectangle.to.y);
+  let Dx = Math.max(rectangle.from.x, rectangle.to.x);
+
+  // Check if vertical edge is inside rect
+  // there must be an P(x,y_n) = (x1,y_n)
+  if (edge.type === 'vertical') {
+    let x      = edge.from.x;
+    let min_y = Math.min(edge.from.y, edge.to.y);
+    let max_y = Math.max(edge.from.y, edge.to.y);
+
+    return Ax < x && x < Dx && min_y < Dy && max_y > Ay;
+  }     
+  
+  // Check if horizontal edge is inside rect
+  // there must be an P(x_n,y1) = (x_n,y1)
+  let y = edge.from.y;
+  let min_x = Math.min(edge.from.x, edge.to.x);
+  let max_x = Math.max(edge.from.x, edge.to.x);
+
+  return Ay < y && y < Dy && min_x < Dx && max_x > Ax;
+}
 
 function solve_solution_two(positions: Pos[]) {
-  // let edges = find_edges(positions);
-  // let vertical = edges.filter((edge) => edge.type === 'vertical');
-  // let horizontal = edges.filter((edge) => edge.type === 'horizontal');
-  // let  boxes = find_vertical_boxes();
-  let rectangles = find_rectangles(positions);
-  for (let rectangle of rectangles) {
-    let inside = rectangle.corners.every((corner) => IsPointInPolygon(corner, positions))
-    if (inside) {
-      console.log(rectangle.from, rectangle.to, rectangle.area)
-      console.log()
+  let edges      = find_edges(positions);
+  let candidates = [] as Rectangle[];
+  for (let rectangle of find_rectangles(positions)) {
+    // If any edge of the polygon is inside the rectangle, then the rectangle is outside the polygon
+    if (edges.some((edge) => is_edge_inside_rectangle(edge, rectangle))) {
+      continue;   
     }
+
+    candidates.push(rectangle);
   }
+
+  let sorted = candidates.toSorted((a, b) => b.area - a.area);
+  return sorted[0].area;
 }
 
 
-const positions = parse_positions('./test.txt')
-// console.log(`Solution 1: ${solve_solution_one(positions)}`);
-solve_solution_two(positions);
-
-// let board = Array.from({
-//   length: 100,
-// }).map(
-//   _ => Array.from({
-//     length: 100,
-//   }).map(_ => '.')
-// )
-
-// for (let pos of positions) {
-//   board[pos.y / 1000 | 0][pos.x / 1000 | 0] = '#';
-// }
-
-// for (let line of board) {
-//   console.log(line.join(''))
-// }
+const positions = parse_positions('./input.txt')
+console.log(`Solution 1: ${solve_solution_one(positions)}`);
+console.log(`Solution 2: ${solve_solution_two(positions)}`);
